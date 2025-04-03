@@ -1,0 +1,86 @@
+package templates
+
+import "github.com/thrillee/gds/internals/db"
+import "fmt"
+
+templ RepositoryList(repositories []db.Repository) {
+	<div class="overflow-x-auto bg-white shadow-md rounded-lg">
+		<table class="min-w-full divide-y divide-gray-200">
+			<thead class="bg-gray-50">
+				<tr>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Repository</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Language</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stars</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Synced</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+				</tr>
+			</thead>
+			<tbody class="bg-white divide-y divide-gray-200">
+				if len(repositories) == 0 {
+					<tr>
+						<td colspan="6" class="px-6 py-4 text-center text-gray-500">
+							No repositories found. Add a repository to get started.
+						</td>
+					</tr>
+				} else {
+					for _, repo := range repositories {
+						<tr class="hover:bg-gray-50">
+							<td class="px-6 py-4 whitespace-nowrap">
+								<a href={ templ.SafeURL("/repositories/" + fmt.Sprintf("%d", repo.ID)) } class="text-blue-600 hover:underline">
+									{ repo.FullName }
+								</a>
+							</td>
+							<td class="px-6 py-4">
+								if repo.Description.Valid {
+									{ truncate(repo.Description.String, 50) }
+								} else {
+									<span class="text-gray-400">No description</span>
+								}
+							</td>
+							<td class="px-6 py-4">
+								if repo.Language.Valid {
+									{ repo.Language.String }
+								} else {
+									<span class="text-gray-400">Unknown</span>
+								}
+							</td>
+							<td class="px-6 py-4">
+								if repo.StargazersCount.Valid {
+									{ fmt.Sprintf("%d", repo.StargazersCount.Int64) }
+								} else {
+									<span class="text-gray-400">0</span>
+								}
+							</td>
+							<td class="px-6 py-4">
+								if repo.LastSyncedAt.Valid {
+									{ repo.LastSyncedAt.Time.Format("Jan 02, 2006 15:04") }
+								} else {
+									<span class="text-gray-400">Never</span>
+								}
+							</td>
+							<td class="px-6 py-4 whitespace-nowrap text-right">
+								<a
+									href={ templ.SafeURL("/repositories/" + fmt.Sprintf("%d", repo.ID)) }
+									class="text-blue-600 hover:text-blue-900 mr-3"
+								>
+									View
+								</a>
+								<button
+									hx-post={ "/repositories/" + fmt.Sprintf("%d", repo.ID) + "/sync" }
+									hx-indicator={ "#sync-indicator-" + fmt.Sprintf("%d", repo.ID) }
+									class="text-green-600 hover:text-green-900"
+								>
+									Sync
+									<span id={ "sync-indicator-" + fmt.Sprintf("%d", repo.ID) } class="htmx-indicator ml-1">
+										<i class="fas fa-spinner fa-spin"></i>
+									</span>
+								</button>
+							</td>
+						</tr>
+					}
+				}
+			</tbody>
+		</table>
+	</div>
+}

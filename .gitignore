@@ -1,0 +1,85 @@
+# Created by https://www.toptal.com/developers/gitignore/api/go,vscode,env,dotenv,bin,javascript,js,express,typescript,nextjs,reactjs,hardhat
+# Edit at https://www.toptal.com/developers/gitignore?templates=go,vscode,env,dotenv,bin,javascript,js,express,typescript,nextjs,reactjs,hardhat
+
+#!! ERROR: bin is undefined. Use list command to see defined gitignore types !!#
+
+### dotenv ###
+.env
+
+#!! ERROR: env is undefined. Use list command to see defined gitignore types !!#
+
+#!! ERROR: express is undefined. Use list command to see defined gitignore types !!#
+
+### Go ###
+# If you prefer the allow list template instead of the deny list, see community template:
+# https://github.com/github/gitignore/blob/main/community/Golang/Go.AllowList.gitignore
+#
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+
+# Go workspace file
+go.work
+
+#!! ERROR: hardhat is undefined. Use list command to see defined gitignore types !!#
+
+#!! ERROR: javascript is undefined. Use list command to see defined gitignore types !!#
+
+#!! ERROR: js is undefined. Use list command to see defined gitignore types !!#
+
+### NextJS ###
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+#!! ERROR: reactjs is undefined. Use list command to see defined gitignore types !!#
+
+#!! ERROR: typescript is undefined. Use list command to see defined gitignore types !!#
+
+#!! ERROR: vscode is undefined. Use list command to see defined gitignore types !!#
+
+# End of https://www.toptal.com/developers/gitignore/api/go,vscode,env,dotenv,bin,javascript,js,express,typescript,nextjs,reactjs,hardhat
+

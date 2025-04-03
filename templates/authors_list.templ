@@ -1,0 +1,67 @@
+package templates
+
+import (
+	"fmt"
+	"github.com/thrillee/gds/internals/db"
+)
+
+templ displayAuthors(data struct {
+	Repository db.Repository
+	Authors    []db.GetTopCommitAuthorsRow
+	Limit      int64
+}) {
+	for index, author := range data.Authors {
+		<tr class="hover:bg-gray-50">
+			<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+				{ fmt.Sprint(index + 1) }
+			</td>
+			<td class="px-6 py-4">
+				<div class="flex items-center">
+					<img
+						class="h-10 w-10 rounded-full bg-gray-200"
+						src={ string(templ.SafeURL("https://www.gravatar.com/avatar/" + md5Hash(author.AuthorEmail) + "?s=100&d=identicon")) }
+						alt={ author.AuthorName }
+					/>
+					<div class="ml-4">
+						<div class="text-sm font-medium text-gray-900">
+							{ author.AuthorName }
+						</div>
+						<div class="text-sm text-gray-500">{ author.AuthorEmail }</div>
+					</div>
+				</div>
+			</td>
+			<td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+				{ fmt.Sprintf("%d", author.CommitCount) }
+			</td>
+		</tr>
+	}
+}
+
+templ AuthorsList(data struct {
+	Repository db.Repository
+	Authors    []db.GetTopCommitAuthorsRow
+	Limit      int64
+}) {
+	<div class="overflow-x-auto">
+		<table class="min-w-full divide-y divide-gray-200">
+			<thead class="bg-gray-50">
+				<tr>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Rank</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Author</th>
+					<th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Commits</th>
+				</tr>
+			</thead>
+			<tbody class="bg-white divide-y divide-gray-200">
+				if len(data.Authors) == 0 {
+					<tr>
+						<td colspan="4" class="px-6 py-4 text-center text-gray-500">
+							No commit authors found for this repository.
+						</td>
+					</tr>
+				} else {
+					@displayAuthors(data)
+				}
+			</tbody>
+		</table>
+	</div>
+}

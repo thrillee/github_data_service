@@ -1,0 +1,76 @@
+package templates
+
+templ AddRepositoryForm() {
+	<div class="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all w-full max-w-lg p-6">
+		<div class="flex justify-between items-center pb-3">
+			<h2 class="text-xl font-bold">Add Repository</h2>
+			<button
+				class="modal-close text-gray-400 hover:text-gray-500"
+				onclick="document.getElementById('modal-container').classList.add('hidden')"
+			>
+				<i class="fas fa-times"></i>
+			</button>
+		</div>
+		<form hx-post="/repositories" hx-swap="none" hx-indicator="#form-loading">
+			<div class="mb-4">
+				<label for="full_name" class="block text-gray-700 text-sm font-bold mb-2">Repository Full Name:</label>
+				<input
+					type="text"
+					id="full_name"
+					name="full_name"
+					placeholder="e.g., owner/repo"
+					class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+					required
+				/>
+				<p class="text-gray-500 text-xs mt-1">Format: owner/repository</p>
+			</div>
+			<div class="mb-4">
+				<label for="sync_from_date" class="block text-gray-700 text-sm font-bold mb-2">Sync From Date (Optional):</label>
+				<input
+					type="date"
+					id="sync_from_date"
+					name="sync_from_date"
+					class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+				/>
+				<p class="text-gray-500 text-xs mt-1">Leave empty to fetch all available commits</p>
+			</div>
+			<div class="flex items-center justify-between mt-6">
+				<button
+					type="button"
+					class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+					onclick="document.getElementById('modal-container').classList.add('hidden')"
+				>
+					Cancel
+				</button>
+				<button
+					type="submit"
+					class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
+				>
+					Add Repository
+					<span id="form-loading" class="htmx-indicator ml-1">
+						<i class="fas fa-spinner fa-spin"></i>
+					</span>
+				</button>
+			</div>
+		</form>
+	</div>
+	<script>
+        // Show the modal container when this content is loaded
+        document.getElementById("modal-container").classList.remove("hidden");
+
+        // Handle form submission success
+        document.body.addEventListener("htmx:afterRequest", function (evt) {
+            if (
+                evt.detail.elt.getAttribute("hx-post") === "/repositories" &&
+                evt.detail.successful
+            ) {
+                // Hide the modal
+                document.getElementById("modal-container").classList.add("hidden");
+                // Show success message
+                showAlert("Repository added successfully!", "success");
+                // Refresh the repositories list
+                htmx.ajax("GET", "/repositories", "#main-content");
+            }
+        });
+    </script>
+}
