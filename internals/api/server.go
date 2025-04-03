@@ -49,6 +49,7 @@ func (s *Server) Router() http.Handler {
 	r.Post("/repositories", s.handleAddRepository)
 	r.Get("/repositories/{id}", s.handleGetRepository)
 	r.Post("/repositories/{id}/reset", s.handleResetRepositorySync)
+	r.Post("/repositories/{id}/sync", s.handleRepositorySync)
 	r.Get("/repositories/{id}/commits", s.handleListCommits)
 	r.Get("/repositories/{id}/authors", s.handleTopAuthors)
 	r.Get("/repositories/{id}/reset-sync-modal", s.handleResetSyncModal)

@@ -111,6 +111,11 @@ func (s *RepositoryService) AddRepository(ctx context.Context, fullName string) 
 		return 0, fmt.Errorf("failed to get last insert ID: %w", err)
 	}
 
+	err = s.SyncRepository(ctx, id)
+	if err != nil {
+		return 0, fmt.Errorf("Sync Failed: %w", err)
+	}
+
 	return id, nil
 }
 

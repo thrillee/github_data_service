@@ -312,6 +312,30 @@ func (s *Server) handleTopAuthors(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func (s *Server) handleRepositorySync(w http.ResponseWriter, r *http.Request) {
+	idStr := chi.URLParam(r, "id")
+	id, err := strconv.ParseInt(idStr, 10, 64)
+	if err != nil {
+		http.Error(w, "Invalid repository ID", http.StatusBadRequest)
+		return
+	}
+
+	_, err = s.queries.GetRepository(r.Context(), id)
+	if err != nil {
+		http.Error(w, "Repository not found", http.StatusNotFound)
+		return
+	}
+
+	ctx := r.Context()
+	err = s.service.SyncRepository(ctx, id)
+	if err != nil {
+		http.Error(w, "Sycning Failed", http.StatusInternalServerError)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/repositories/%d", id), http.StatusSeeOther)
+}
+
 func (s *Server) handleResetSyncModal(w http.ResponseWriter, r *http.Request) {
 	idStr := chi.URLParam(r, "id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
