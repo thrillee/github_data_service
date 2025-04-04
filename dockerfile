@@ -31,6 +31,7 @@ COPY --from=builder /app/gds /app/gds
 # Copy database migrations
 COPY --from=builder /app/migrations /app/migrations
 COPY --from=builder /app/static /app/static
+COPY --from=builder /app/github_data.db /app/github_data.db
 
 # Copy any required files (like .env if needed)
 # COPY --from=builder /app/.env /app/.env

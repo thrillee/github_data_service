@@ -9,6 +9,12 @@ import (
 	"time"
 )
 
+// GitHubClient defines the interface for GitHub API operations
+type GitHubClient interface {
+	GetRepository(fullName string) (*Repository, error)
+	GetCommits(fullName string, page, perPage int, since time.Time) ([]Commit, bool, error)
+}
+
 // Client is a GitHub API client
 type Client struct {
 	token      string

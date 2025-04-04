@@ -13,13 +13,13 @@ import (
 
 // RepositoryService handles business logic for repositories
 type RepositoryService struct {
-	queries      *db.Queries
-	githubClient *github.Client
+	queries      db.DBQuerier
+	githubClient github.GitHubClient
 	syncInterval time.Duration
 }
 
 // NewRepositoryService creates a new repository service
-func NewRepositoryService(queries *db.Queries, githubClient *github.Client, syncInterval time.Duration) *RepositoryService {
+func NewRepositoryService(queries db.DBQuerier, githubClient github.GitHubClient, syncInterval time.Duration) *RepositoryService {
 	return &RepositoryService{
 		queries:      queries,
 		githubClient: githubClient,
