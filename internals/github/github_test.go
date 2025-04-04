@@ -2,11 +2,102 @@ package github
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 	"time"
 )
+
+// MockClient is a test implementation of GitHubClient interface
+type MockClient struct {
+	server     *httptest.Server
+	token      string
+	httpClient *http.Client
+}
+
+// NewMockClient creates a new mock GitHub client for testing
+func NewMockClient(server *httptest.Server, token string) *MockClient {
+	return &MockClient{
+		server: server,
+		token:  token,
+		httpClient: &http.Client{
+			Timeout: 10 * time.Second,
+		},
+	}
+}
+
+// GetRepository implements the GitHubClient interface for testing
+func (m *MockClient) GetRepository(fullName string) (*Repository, error) {
+	url := m.server.URL + "/repos/" + fullName
+	req, err := m.newRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	var repo Repository
+	if err := m.doRequest(req, &repo); err != nil {
+		return nil, err
+	}
+	return &repo, nil
+}
+
+// GetCommits implements the GitHubClient interface for testing
+func (m *MockClient) GetCommits(fullName string, page, perPage int, since time.Time) ([]Commit, bool, error) {
+	sinceStr := since.Format(time.RFC3339)
+	url := fmt.Sprintf("%s/repos/%s/commits?per_page=%d&page=%d&since=%s",
+		m.server.URL, fullName, perPage, page, sinceStr)
+
+	req, err := m.newRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return nil, false, err
+	}
+	var commits []Commit
+	if err := m.doRequest(req, &commits); err != nil {
+		return nil, false, err
+	}
+
+	// Check if there are more pages
+	hasMore := len(commits) == perPage
+	return commits, hasMore, nil
+}
+
+// newRequest creates a new HTTP request with the necessary headers
+func (m *MockClient) newRequest(method, url string, body *strings.Reader) (*http.Request, error) {
+	var req *http.Request
+	var err error
+	if body != nil {
+		req, err = http.NewRequest(method, url, body)
+	} else {
+		req, err = http.NewRequest(method, url, nil)
+	}
+	if err != nil {
+		return nil, fmt.Errorf("error creating request: %w", err)
+	}
+	// Add auth header if token is available
+	if m.token != "" {
+		req.Header.Add("Authorization", "token "+m.token)
+	}
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
+	req.Header.Add("User-Agent", "GitHub-Data-Service")
+	return req, nil
+}
+
+// doRequest performs the HTTP request and unmarshals the response
+func (m *MockClient) doRequest(req *http.Request, v interface{}) error {
+	resp, err := m.httpClient.Do(req)
+	if err != nil {
+		return fmt.Errorf("error making request: %w", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("GitHub API returned status: %s", resp.Status)
+	}
+	if err := json.NewDecoder(resp.Body).Decode(v); err != nil {
+		return fmt.Errorf("error decoding response: %w", err)
+	}
+	return nil
+}
 
 func TestGetRepository(t *testing.T) {
 	// Setup test server
@@ -45,14 +136,8 @@ func TestGetRepository(t *testing.T) {
 	}))
 	defer server.Close()
 
-	// Create client with test server URL
-	client := NewClient("test-token")
-	// Override the HTTP client to use our test server
-	client.httpClient = &http.Client{
-		Transport: &http.Transport{
-			Proxy: http.ProxyFromEnvironment,
-		},
-	}
+	// Create mock client with test server URL
+	client := NewMockClient(server, "test-token")
 
 	// Test GetRepository
 	repo, err := client.GetRepository("owner/repo")
@@ -170,14 +255,7 @@ func TestGetCommits(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client := &Client{
-		token: "test-token",
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-			},
-		},
-	}
+	client := NewMockClient(server, "test-token")
 
 	// Test GetCommits
 	since := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -250,14 +328,7 @@ func TestGetCommits_NoMorePages(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client := &Client{
-		token: "test-token",
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-			},
-		},
-	}
+	client := NewMockClient(server, "test-token")
 
 	// Test GetCommits
 	since := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -284,14 +355,7 @@ func TestGetRepository_APIError(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client := &Client{
-		token: "test-token",
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-			},
-		},
-	}
+	client := NewMockClient(server, "test-token")
 
 	// Test GetRepository
 	_, err := client.GetRepository("owner/nonexistent")
@@ -309,14 +373,7 @@ func TestGetCommits_APIError(t *testing.T) {
 	defer server.Close()
 
 	// Create client with test server URL
-	client := &Client{
-		token: "invalid-token",
-		httpClient: &http.Client{
-			Transport: &http.Transport{
-				Proxy: http.ProxyFromEnvironment,
-			},
-		},
-	}
+	client := NewMockClient(server, "invalid-token")
 
 	// Test GetCommits
 	since := time.Date(2020, 1, 1, 0, 0, 0, 0, time.UTC)
@@ -341,9 +398,4 @@ func TestNewClient(t *testing.T) {
 	if client.httpClient.Timeout != 10*time.Second {
 		t.Errorf("Expected timeout of 10 seconds, got %v", client.httpClient.Timeout)
 	}
-}
-
-// Helper function to make test server URL usable by the client
-func mockServerURL(server *httptest.Server, endpoint string) string {
-	return server.URL + endpoint
 }
